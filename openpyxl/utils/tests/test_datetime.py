@@ -20,7 +20,10 @@ def test_to_iso():
 @pytest.mark.parametrize("value, group, expected",
                          [
                              ("2011-06-30", "date", "2011-06-30"),
+                             ("12:19", "time", "12:19"),
                              ("12:19:01", "time", "12:19:01"),
+                             ("12:19:01.123", "time", "12:19:01.123"),
+                             ("12:19:01.2", "time", "12:19:01.2"),
                          ]
                          )
 def test_iso_regex(value, group, expected):
@@ -35,7 +38,10 @@ def test_iso_regex(value, group, expected):
                              ("2011-06-30T13:35:26Z", datetime(2011, 6, 30, 13, 35, 26)),
                              ("2013-03-04T12:19:01.00Z", datetime(2013, 3, 4, 12, 19, 1)),
                              ("2011-06-30", date(2011, 6, 30)),
+                             ("12:19", time(12, 19)),
                              ("12:19:01", time(12, 19, 1)),
+                             ("12:19:01.123", time(12, 19, 1, 123_000)),
+                             ("12:19:01.2", time(12, 19, 1, 200_000)),
                              ("2020-12-03T12:19:01.300Z", datetime(2020, 12, 3, 12, 19, 1, 300_000)),
                              ("2020-12-03T12:19:01.030", datetime(2020, 12, 3, 12, 19, 1, 30_000)),
                              ("2020-12-03T12:19:01.003Z", datetime(2020, 12, 3, 12, 19, 1, 3000)),
@@ -51,13 +57,15 @@ def test_from_iso(value, expected):
 @pytest.mark.parametrize("value, expected",
                          [
                              (date(1899, 12, 31), 0),
+                             (date(1900, 1, 1), 1),
                              (date(1900, 1, 15), 15),
                              (date(1900, 2, 28), 59),
                              (datetime(1900, 2, 28, 21, 0, 0), 59.875),
                              (date(1900, 3, 1), 61),
                              (datetime(2010, 1, 18, 14, 15, 20, 1600), 40196.5939815),
                              (date(2009, 12, 20), 40167),
-                             (datetime(1506, 10, 15), -143618.0),
+                             (datetime(1506, 10, 15), -143617.0),
+                             (date(1, 1, 1), -693593),
                              (time(0), 0),
                              (time(6, 0), 0.25),
                              (timedelta(hours=6), 0.25),
@@ -76,6 +84,7 @@ def test_to_excel(value, expected):
                              (datetime(2010, 1, 18, 14, 15, 20, 1600), 38734.5939815),
                              (date(2009, 12, 20), 38705),
                              (datetime(1506, 10, 15), -145079.0),
+                             (date(1, 1, 1), -695055),
                              (time(0), 0),
                              (time(6, 0), 0.25),
                              (timedelta(hours=6), 0.25),
@@ -98,10 +107,13 @@ def test_to_excel_mac(value, expected):
                              (60.5, datetime(1900, 2, 28, 12, 0)),
                              (61, datetime(1900, 3, 1, 0, 0)),
                              (40372.27616898148, datetime(2010, 7, 13, 6, 37, 41)),
-                             (40196.5939815, datetime(2010, 1, 18, 14, 15, 20, 1600)),
+                             (40196.5939815, datetime(2010, 1, 18, 14, 15, 20, 2000)),
                              (0.125, time(3, 0)),
-                             (42126.958333333219, datetime(2015, 5, 2, 22, 59, 59, 999990)),
+                             (42126.958333333219, datetime(2015, 5, 2, 23, 0, 0, 0)),
                              (42126.999999999884, datetime(2015, 5, 3, 0, 0, 0)),
+                             (0, time(0)),
+                             (0.9999999995, datetime(1900, 1, 1)),
+                             (1, datetime(1900, 1, 1)),
                              (-0.25, datetime(1899, 12, 29, 18, 0, 0)),
                              (None, None),
                          ])
@@ -171,9 +183,9 @@ class CET(tzinfo):
 
 def test_localised_time():
 
-    from ..datetime import time_to_days, GMT
+    from ..datetime import time_to_days, UTC
 
-    dt1 = datetime(2015, 7, 24, tzinfo=GMT())
+    dt1 = datetime(2015, 7, 24, tzinfo=UTC)
     dt2 = datetime(2015, 7, 24, 2, tzinfo=CET())
     assert dt2 - dt2 == timedelta(0)
 
