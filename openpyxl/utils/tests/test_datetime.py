@@ -56,6 +56,10 @@ def test_iso_regex(value, group, expected):
                              ("2020-12-03T12:19:01.003Z", datetime(2020, 12, 3, 12, 19, 1, 3000)),
                              ("2020-12-03T12:19:01.3Z", datetime(2020, 12, 3, 12, 19, 1, 300_000)),
                              ("2020-12-03T12:19:01.03", datetime(2020, 12, 3, 12, 19, 1, 30_000)),
+                             ("PT0M", timedelta(0)),
+                             ("PT2H0M1S", timedelta(hours=2, seconds=1)),
+                             ("PT25H20M1.1S", timedelta(days=1, hours=1, minutes=20, seconds=1.1)),
+                             ("PT25H70M1.123S", timedelta(days=1, hours=2, minutes=10, seconds=1.123)),
                          ]
                          )
 def test_from_iso(value, expected):
@@ -130,6 +134,31 @@ def test_from_excel(value, expected):
     from ..datetime import from_excel
     FUT = from_excel
     assert FUT(value) == expected
+
+
+@pytest.mark.parametrize("value, expected",
+                         [
+                             (0, timedelta(hours=0)),
+                             (0.5, timedelta(hours=12)),
+                             (-0.5, timedelta(hours=-12)),
+                             (1.25, timedelta(hours=30)),
+                             (-1.25, timedelta(hours=-30)),
+                             (0.0006944443, timedelta(minutes=1)),
+                             (-0.0006944443, timedelta(minutes=-1)),
+                             (0.0006944328, timedelta(minutes=1, microseconds=-1000)),
+                             (-0.0006944328, timedelta(minutes=-1, microseconds=1000)),
+                             (59.5, timedelta(days=59, hours=12)),
+                             (60.5, timedelta(days=60, hours=12)),
+                             (61.5, timedelta(days=61, hours=12)),
+                             (0.9999999995, timedelta(days=1)),
+                             (1.0000000005, timedelta(days=1)),
+                             (1.0000026378, timedelta(days=1, microseconds=228000)),
+                             (None, None),
+                         ])
+def test_from_excel_timedelta(value, expected):
+    from ..datetime import from_excel
+    FUT = from_excel
+    assert FUT(value, timedelta=True) == expected
 
 
 @pytest.mark.parametrize("value, expected",
