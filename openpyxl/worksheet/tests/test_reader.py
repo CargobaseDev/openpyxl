@@ -441,6 +441,19 @@ class TestWorksheetParser:
         assert parser.array_formulae['C10']['ref'] == 'C10:C14'
 
 
+    def test_table_formula(self, WorkSheetParser):
+        parser = WorkSheetParser
+        src = """
+        <c r="C9" xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+          <f t="dataTable" ref="C9:C24" dt2D="0" dtr="0" r1="C4"/>
+          <v>1</v>
+       </c>"""
+        element = fromstring(src)
+        from ..formula import DataTableFormula
+        formula = parser.parse_formula(element)
+        assert isinstance(formula, DataTableFormula)
+
+
     def test_extended_conditional_formatting(self, WorkSheetParser, recwarn):
         parser = WorkSheetParser
 
