@@ -94,6 +94,8 @@ def to_excel(dt, epoch=WINDOWS_EPOCH):
         dt = datetime.datetime.combine(dt, datetime.time())
 
     # rebase on epoch and adjust for < 1900-03-01
+    if hasattr(dt, 'tzinfo'):
+        epoch = epoch.astimezone(dt.tzinfo)
     days = (dt - epoch).days
     if 0 < days <= 60 and epoch == WINDOWS_EPOCH:
         days -= 1
